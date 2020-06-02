@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!ELEMENT SpeakFreelyConfig (param*, meta*, lexicon*, vocab, stop?, training, test?)>
+<!ATTLIST SpeakFreelyConfig
+     version NMTOKEN #REQUIRED
+>
+
+<!ELEMENT vocab (item | ruleref)+>
+
+<!ELEMENT stop (item)+>
+
+<!ELEMENT item (#PCDATA)>
+<!ATTLIST item
+    xml:lang CDATA #IMPLIED
+    conf CDATA #IMPLIED
+>
+
+<!ELEMENT ruleref EMPTY>
+<!ATTLIST ruleref
+    uri CDATA #REQUIRED
+    words CDATA #IMPLIED
+    tag CDATA #IMPLIED
+    conf CDATA #IMPLIED
+>
+
+<!ELEMENT param (value)>
+<!ATTLIST param 
+    name CDATA #REQUIRED
+>
+
+<!ELEMENT lexicon EMPTY>
+<!ATTLIST lexicon
+    uri CDATA #REQUIRED
+>
+
+<!ELEMENT value (#PCDATA) >
+<!ELEMENT meta EMPTY >
+<!ATTLIST meta 
+   name CDATA #REQUIRED
+   content CDATA #REQUIRED
+>
+
+<!ELEMENT training (sentence)+>
+<!ELEMENT test (sentence)+>
+
+<!ELEMENT sentence ( #PCDATA | ruleref | item )*>
+<!ATTLIST sentence
+    meaning CDATA #IMPLIED
+    count NMTOKEN #IMPLIED
+    memorize NMTOKEN #IMPLIED
+    train_slm NMTOKEN #IMPLIED
+    prior NMTOKEN #IMPLIED
+>
+
+
