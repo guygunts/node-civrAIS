@@ -83,7 +83,7 @@ class LoginService {
                 return result
             }
 
-            if (req.body.menu_action == 'addconcept' || req.body.menu_action == 'updateconcept' || req.body.menu_action == 'deleteconcept') {
+            if (req.body.menu_action == 'addconcept' || req.body.menu_action == 'updateconcept' || req.body.menu_action == 'deleteconcept' ||req.body.menu_action == 'addvariation'||req.body.menu_action == 'updatevariation'||req.body.menu_action == 'deletevariation') {
                 console.log(req.body)
                 const result = await this.addupdatedeleteconcepts(req)
                 log.info("response Data:",result)
@@ -245,6 +245,14 @@ class LoginService {
                 return result
                
             }
+			
+			if(req.body.menu_action == 'getvariation'){
+				console.log(req.body.menus)
+                const result = await this.getvariation(req)
+                log.info("response Data:",result)
+                return result
+				
+			}
         } catch (err) {
             console.log(err);
             log.error("response Data:",err)
@@ -295,11 +303,11 @@ class LoginService {
                                     sub_menu.push(item2)
                         }
                     }else{
-                        sub_menu = [{}]
+                        sub_menu = []
                     }
                     }else{
                 
-                        sub_menu = [{}]
+                        sub_menu = []
                     }
                     const item = {
                         "menu_id": row.recordsets[0][i].menu_id,
@@ -317,7 +325,7 @@ class LoginService {
                         "menu_path": row.recordsets[0][i].menu_url,
                         "menu_icon": row.recordsets[0][i].menu_icon,
                         "menu_active": row.recordsets[0][i].menu_active,
-                        "sub_menu": [{}]
+                        "sub_menu": []
                     }
                     menus.push(item);
                 }
@@ -351,7 +359,8 @@ class LoginService {
                         "first_name": row.recordsets[1][0].first_name,
                         "last_name": row.recordsets[1][0].last_name,
                         "prefix_name": row.recordsets[1][0].prefix_name,
-                        "email": row.recordsets[1][0].email
+                        "email": row.recordsets[1][0].email,
+                        "user_type": row.recordsets[1][0].user_type
                     },
                     "roles": [
                         {
@@ -444,22 +453,23 @@ class LoginService {
                 }
 
             }
-            var resultJson
-            resultJson = {
-                "code": row.recordsets[1][0].result,
+            let result=[]
+			let data1={
+				"code": row.recordsets[1][0].result,
                 "msg": row.recordsets[1][0].msg,
                 "recnums": row.recordsets[1][0].recnum,
                 "pagenum": row.recordsets[1][0].pagenum,
-                "result": {
-                    "header": [{
+			}
+			result.push(data1)
+			 let resultJson = {
+                "reportname": "Get Menu",
+                "columnsname": [{
                         "column_name": "Menu Name",
-                        "column_field": "menu_name",
-                        "column_type": "text",
-                        "column_align": "left"
+                        "column_field": "menu_name"
                     }],
-                    menus
-                }
-            }
+                "recs": menus,
+                "result": result
+            };
 			
             return resultJson
 
@@ -474,13 +484,15 @@ class LoginService {
             let row= await   connectmssql.then((pool) => {
                 return pool.request() 
                 .input('jsonIN', JSON.stringify(req.body))
-                .output('resultOUT')
+                .output('result')
+				.output('login_msg')
                 .execute(`${pathdev.parsed.database}.civr.sp_admin_menu`)
             })	
+			console.log(row);
             var resultJson
             resultJson = {
-                "code": row.recordsets[1][0].result,
-                "msg": row.recordsets[1][0].msg,
+                "code": row.output.result,
+                "msg": row.output.login_msg,
             }
             return resultJson
             
@@ -631,30 +643,27 @@ class LoginService {
             }
 
            
-            var resultJson
-
-            resultJson = {
+             let result =[]
+            let data1={
                 "code": row.recordsets[1][0].result,
                 "msg": row.recordsets[1][0].msg,
                 "recnums": row.recordsets[1][0].recnum,
                 "pagenum": row.recordsets[1][0].pagenum,
-                "result": {
-                    "header": [{
-                        "column_name": "Role Name",
-                        "column_field": "role_name",
-                        "column_type": "text",
-                        "column_align": "left"
-                    }, {
-                        "column_name": "Role Description",
-                        "column_field": "role_desc",
-                        "column_type": "text",
-                        "column_align": "left",
-                    }],
-                    "data":data
-                    
-                    
-                }
-            }
+             }
+             result.push(data1)
+
+            let resultJson = {
+                "reportname": "Get Role",
+                "columnsname": [{
+                    "column_name": "Role Name",
+                    "column_field": "role_name"
+                }, {
+                    "column_name": "Role Description",
+                    "column_field": "role_desc"
+                }],
+                "recs":data, 
+                "result": result
+            };
 			
             return resultJson
 
@@ -664,6 +673,7 @@ class LoginService {
     }
 
     async addupdatedeleteRole(req){
+		console.log(req.body)
         try {
                 let role= await   connectmssql.then((pool) => {
                     return pool.request() 
@@ -671,8 +681,8 @@ class LoginService {
                     .output('resultOUT')
                     .execute(`${pathdev.parsed.database}.civr.sp_admin_role`)
                 })
-
-            return role.recordsets[1][0]
+				console.log(role)
+            return role.recordset[0]
 
         } catch (err) {
             log.error("response Data addupdatedeleteRole:",err)
@@ -714,7 +724,7 @@ class LoginService {
                         "column_align": "left",
                     }, {
                         "column_name": "User Role",
-                        "column_field": "user_role",
+                        "column_field": "role_name",
                         "column_type": "text",
                         "column_align": "left",
                     }, {
@@ -741,11 +751,11 @@ class LoginService {
             let role= await   connectmssql.then((pool) => {
                 return pool.request() 
                 .input('jsonIN', JSON.stringify(req.body))
-                .output('resultOUT')
+				.output('resultOUT')
                 .execute(`${pathdev.parsed.database}.civr.sp_admin_user`)
             })
 
-        return role.recordsets[1][0]
+        return role.recordsets[0]
 
         } catch (err) {
             log.error("response Data addupdatedeleteUser:",err)
@@ -764,44 +774,30 @@ class LoginService {
                 .output('msgout')
                 .execute(`${pathdev.parsed.database}.civr.sp_getprojects`)
             })
-            let data =rows.recordsets[0]
-
-            var resultJson
-            resultJson = {
-                "code": rows.recordsets[1][0].result,
-                "msg": rows.recordsets[1][0].msg,
-                "recnums": rows.recordsets[1][0].rec_num,
-                "pagenum": rows.recordsets[1][0].page_num,
-                "result": {
-                    "header": [{
-                        "column_name": "Project Name",
-                        "column_field": "project_name",
-                        "column_type": "text",
-                        "column_align": "left"
-                    }, {
-                        "column_name": "Project Description",
-                        "column_field": "project_desc",
-                        "column_type": "text",
-                        "column_align": "left",
-                    }, {
-                        "column_name": "Language",
-                        "column_field": "language",
-                        "column_type": "text",
-                        "column_align": "left",
-                    }, {
-                        "column_name": "Channel",
-                        "column_field": "channel",
-                        "column_type": "text",
-                        "column_align": "left",
-                    }, {
-                        "column_name": "Active",
-                        "column_field": "active",
-                        "column_type": "checkbox",
-                        "column_align": "center",
-                    }],
-                    data
-                }
-            }
+			
+			        let resultJson = {
+            "reportname": "Get Project",
+            "columnsname":   [{
+                "column_name": "Project Name",
+                "column_field": "project_name",
+            }, {
+                "column_name": "Project Description",
+                "column_field": "project_desc",
+            }, {
+                "column_name": "Language",
+                "column_field": "language",
+            }, {
+                "column_name": "Channel",
+                "column_field": "channel",
+            }, {
+                "column_name": "Active",
+                "column_field": "active",
+            }],
+            "recs":rows.recordsets[0], 
+            "result": rows.recordsets[1]
+        };	
+            return resultJson
+			
 			
             return resultJson
         } catch (err) {
@@ -817,8 +813,14 @@ class LoginService {
                 .output('resultOUT')
                 .execute(`${pathdev.parsed.database}.civr.sp_admin_project`)
             })
+		 var resultJson
+            resultJson = {
+                "code": role.recordset[0].code,
+                "msg": role.recordset[0].msg,
+            }
+			console.log(resultJson)
+            return resultJson
 
-        return role.recordsets[1][0]
         } catch (err) {
             log.error("response Data addupdatedeleteProjects:",err)
         }
@@ -879,22 +881,26 @@ class LoginService {
                 }
             }
 
-            const rows = await this.dbRepository.executeQuery("call sp_update_permission(?,?,?,?,?,@result); SELECT @result as result",
-                [roleID, menuItem, submenuItem, funcItem, req.body.user_login]);
+            const rows= await  connectmssql.then((pool) => {
+                return pool.request() 
+                .input('role_id_in', roleID)
+                .input('menu_map1', menuItem)
+                .input('menu_map2', submenuItem)
+                .input('func_map', funcItem)
+                .input('user_login', req.body.user_login)
+                .output('result')
+                .output('msg')
+                .execute(`${pathdev.parsed.database}.civr.sp_update_permission`)
+            })
 
             var resultJson
-            for(let i=0; i<rows.length; i++){
-                if(rows[i][0] ==null){
-                    break
-                }
-                if(rows[i][0].result !==null ){
+
+
                     resultJson = {
-                        "code": rows[i][0].result,
-                        "msg": rows[i][0].msg,
+                        "code": rows.output.result,
+                        "msg": rows.output.msg,
                     }
-                }
-            }
-           
+
             return resultJson
 
         } catch (err) {
@@ -905,64 +911,75 @@ class LoginService {
 
 	   async getConcepts(req) {
         try {
-            const rows = await this.dbRepository.executeQuery("call sp_getconcept(?,@dt1);", [JSON.stringify(req.body)]);
-            console.log(rows)
+			  const rows= await  connectmssql.then((pool) => {
+                        return pool.request() 
+                        .input('jsonIN',JSON.stringify(req.body))
+                        .output('msgout')
+                        .execute(`${pathdev.parsed.database}.civr.sp_getconcept`)
+                    })
+
+
             let result = []
             let resultJson
             let columnName = ''
             let arrcolumnName
+			let columnData = ''
+            let arrcolumnData
             let subcolumnName = ''
             let arrsubcolumnName
             let column = []
             let subresult = []
             let data = []
-            columnName = rows[1][0].columnName
+            columnName = rows.recordsets[1][0].columnName
             arrcolumnName = columnName.split(',')
-
-            subcolumnName = rows[1][0].subcolumnName
+			columnData = rows.recordsets[1][0].columnData
+            arrcolumnData=columnData.split(',')
+			
+            subcolumnName = rows.recordsets[1][0].subcolumnName
             arrsubcolumnName = subcolumnName.split(',')
 
-            for (const [key, value] of Object.entries(rows[0][0])) {
-                column.push(key)
 
-            }
             for (let i = 0; i < arrcolumnName.length; i++) {
                 let data = {
                     'column_name': arrcolumnName[i],
-                    'column_data': column[i]
+                    'column_data': arrcolumnData[i]
                 }
                 result.push(data)
             }
 
-            for (let i = 0; i < arrcolumnName.length; i++) {
-                column.shift();
-            }
             let variation =[]
 
-            for (let i = 0; i < rows[0].length; i++) {
+            for (let i = 0; i < rows.recordsets[0].length; i++) {
                 let body ={
-                    "concept_id" : rows[0][i].concept_id,
+                    "concept_id" : rows.recordsets[0][i].concept_id,
 	                "page_id" : req.body.page_id,
 	                "page_size":req.body.page_size
                 }
+				
+				const variation= await  connectmssql.then((pool) => {
+                        return pool.request() 
+                        .input('jsonIN',JSON.stringify(req.body))
+                        .output('msgout')
+                        .execute(`${pathdev.parsed.database}.civr.sp_getconcept_variation`)
+                    })
+					
 
-                const variation = await this.dbRepository.executeQuery("call sp_getconcept_variation(?,@dt1);", [JSON.stringify(body)]);
-				console.log("data"+variation)
+				console.log("data"+variation.recordsets)
                 let datasub = {
-                    "concept_id": rows[0][i].concept_id,
-                    "concept_name": rows[0][i].concept_name,
-                    "lang": rows[0][i].lang,
-                    "type": rows[0][i].type,
-                    "active": rows[0][i].active,
-                    "variation": variation[0]
+                    "concept_id": rows.recordsets[0][i].concept_id,
+                    "concept_name": rows.recordsets[0][i].concept_name,
+                    "lang": rows.recordsets[0][i].lang,
+                    "type": rows.recordsets[0][i].type,
+                    "active": rows.recordsets[0][i].active,
+                    "variation": variation.recordsets[0]
                 }
                 data.push(datasub);
             }
             resultJson = {
-                "code": rows[1][0].result,
-                "msg": rows[1][0].msg,
-                "page_num": rows[1][0].page_num,
-                "rec_num": rows[1][0].rec_num,
+                "code": rows.recordsets[1][0].code,
+                "msg": rows.recordsets[1][0].msg,
+                "page_num": rows.recordsets[1][0].pagenum,
+                "rec_num": rows.recordsets[1][0].recnum,
                 "result": result,
                 "data": data
 
@@ -974,14 +991,59 @@ class LoginService {
             console.log(err);
         }
     }
+	
+	async getvariation(req){
+		          let columnName = ''
+            let arrcolumnName
+			let columnData = ''
+            let arrcolumnData
+		let result = []
+			
+		 const variation= await  connectmssql.then((pool) => {
+                        return pool.request() 
+                        .input('jsonIN',JSON.stringify(req.body))
+                        .output('msgout')
+                        .execute(`${pathdev.parsed.database}.civr.sp_getconcept_variation`)
+                    })
+					
+					columnName = variation.recordsets[1][0].columnName
+            arrcolumnName = columnName.split(',')
+			columnData = variation.recordsets[1][0].columnData
+            arrcolumnData=columnData.split(',')
+			
+			for (let i = 0; i < arrcolumnName.length; i++) {
+                let data = {
+                    'column_name': arrcolumnName[i],
+                    'column_data': arrcolumnData[i]
+                }
+                result.push(data)
+            }
+					let resultJson = {
+                "code": variation.recordsets[1][0].result,
+                "msg": variation.recordsets[1][0].msg,
+				"result":result,
+                "page_num": variation.recordsets[1][0].page_num,
+                "rec_num": variation.recordsets[1][0].rec_num,
+                "data": variation.recordsets[0]
+
+            }
+			return resultJson
+		
+	}
 
         async addupdatedeleteconcepts(req){
             try{
-                 const rows = await this.dbRepository.executeQuery("call sp_admin_concept(?,@dt1);", [JSON.stringify(req.body)]);
+				const rows= await  connectmssql.then((pool) => {
+                        return pool.request() 
+                        .input('jsonIN',JSON.stringify(req.body))
+                        .output('resultOut')
+                        .execute(`${pathdev.parsed.database}.civr.sp_admin_concept`)
+                    })
+					
                 let resultJson
                 resultJson = {
-                    "code": rows[0][0].result,
-                    "msg": rows[0][0].msg,
+                    "code": rows.recordsets[0][0].result,
+                    "msg": rows.recordsets[0][0].msg,
                 }
                 return resultJson
             }catch(err){

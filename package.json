@@ -7,7 +7,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@mysql/xdevapi": "8.0.19",
+    "adm-zip": "^0.4.16",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "config": "^3.2.4",
@@ -17,8 +19,12 @@
     "dotenv": "^8.2.0",
     "ejs": "~2.6.1",
     "env-cmd": "^10.0.1",
+    "excel4node": "^1.7.2",
     "express": "^4.17.1",
     "express-winston": "^4.0.1",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^3.0.0",
     "fs-extra": "^9.0.0",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",

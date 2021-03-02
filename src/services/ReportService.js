@@ -304,7 +304,7 @@ class ReportService {
             console.log(err)
         }
     }
-     async summaryQReport(req) {
+    async summaryQReport(req) {
         try {
             let voiceQC= await   connectmssql.then((pool) => {
                 return pool.request() 
@@ -354,9 +354,16 @@ class ReportService {
                 arrcolumnName = columnName.split(',')
                 // Data Table 1
                 for (let j = 0; j < voiceQC.recordsets[0].length; j++) {
+                   var PerPass 
+                    if(voiceQC.recordsets[0][j].per_pass === null) {
+                        PerPass = 0 
+                    }else {
+                        PerPass = voiceQC.recordsets[0][j].per_pass
+                    }
+                    
                     const item = {
                         "Intent": voiceQC.recordsets[0][j].intent,
-                        "Pass%": voiceQC.recordsets[0][j].per_pass,
+                        "Pass%": PerPass ,//  voiceQC.recordsets[0][j].per_pass,
                         "Pass": voiceQC.recordsets[0][j].pass,
                         "Fail": voiceQC.recordsets[0][j].fail,
                         "Garbage": voiceQC.recordsets[0][j].garbage,
@@ -368,10 +375,10 @@ class ReportService {
                     if (voiceQC.recordsets[0][j].per_pass <= 49.99) {
                         p1 += 1
                     }
-                    if (voiceQC.recordsets[0][j].per_pass >= 50 && voiceQC[0][j].per_pass <= 69.99) {
+                    if (voiceQC.recordsets[0][j].per_pass >= 50 && voiceQC.recordsets[0][j].per_pass <= 69.99) {
                         p2 += 1
                     }
-                    if (voiceQC.recordsets[0][j].per_pass >= 70 && voiceQC[0][j].per_pass <= 84.99) {
+                    if (voiceQC.recordsets[0][j].per_pass >= 70 && voiceQC.recordsets[0][j].per_pass <= 84.99) {
                         p3 += 1
                     }
                     if (voiceQC.recordsets[0][j].per_pass >= 85) {
@@ -390,7 +397,18 @@ class ReportService {
                 }
                 columns.push(items)
             }
-            date_start_test =  voiceQC.recordsets[1][0].date_start.toUpperCase()
+            date_start_test =  voiceQC.recordsets[1][0].date_start
+            // month_names[d.getMonth()] + '-' + d.getFullYear()
+           var date1 = date_start_test.substring(0,10)
+           var date2 = date1.substr(8,2)
+           var month1 = date1.substr(5,2)
+           var year1 = date1.substr(0,4)
+           var month2 = month_names[parseInt(month1)-1]
+           date_start_test = date2 + '-'+ month2 + '-' +year1
+           console.log(date_start_test)
+
+
+
             let grandTotal = [{
                     "Intent": "Total"
                 },

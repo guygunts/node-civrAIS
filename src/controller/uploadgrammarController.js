@@ -5,6 +5,7 @@ opts = {
   timestampFormat:'YYYY-MM-DD HH:mm:ss'
 },
 log = SimpleNodeLogger.createSimpleLogger( opts );
+const pathdev=require('dotenv').config({ path: './config/dev.env' });
 const process = require('process');
 class UploadgrammarController{
 	
@@ -28,6 +29,7 @@ class UploadgrammarController{
     }
 	
     async uploadgrammarController (req,res){
+		console.log("data request:",req.body)
         const upload = await UploadgrammarService.UploadgrammarService(req.body);
         res.json(upload);
         res.end();
@@ -48,8 +50,8 @@ class UploadgrammarController{
         var upload = multer({ storage }).any()
        
         var filessystem = require('fs');
-		
-        var dir = './uploadgrammar/';
+		process.chdir(`${pathdev.parsed.baseHome}`);
+        var dir = `${pathdev.parsed.baseHomeupload}`;
 		console.log(`Current directory: ${process.cwd()}`);
         if (!filessystem.existsSync(dir)) {
             filessystem.mkdirSync(dir);
@@ -76,9 +78,8 @@ class UploadgrammarController{
                 "file_desc": req.body.file_desc
             }
            // console.log(obj);
-            JSON.stringify(obj)
-            UploadgrammarService.uploadGrammar(JSON.stringify(obj))
-           
+            UploadgrammarService.uploadGrammar(obj)
+          
 
             var result = {
                 "code": 200,
@@ -88,7 +89,7 @@ class UploadgrammarController{
 
             const excelToJson = require('convert-excel-to-json');
             var path = require('path');
-            var filePath = path.resolve('./' + '//uploadgrammar//' + req.files[0].filename);
+            var filePath = path.resolve(pathdev.parsed.baseHomeupload+ req.files[0].filename);
             const result1 = excelToJson({
                 sourceFile: filePath
             });
@@ -117,7 +118,7 @@ class UploadgrammarController{
 	const data =await UploadgrammarService.downloadresult(req.params);
        // var pathResult = "/app/pyunimrcp/result/"
 	   console.log(data)
-        res.download(data[0].url_patch +"/"+ "/" + req.params.filename,req.params.filename)
+        res.download(data.recordset[0].url_patch +"/"+ "/" + req.params.filename,req.params.filename)
             res.download(req.params.file_name)
             res.end()
     }
